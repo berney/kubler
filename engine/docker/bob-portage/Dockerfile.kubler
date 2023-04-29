@@ -27,8 +27,6 @@ EOF
 FROM busybox:latest
 COPY --from=patcher /var/db/repos/gentoo /var/db/repos/gentoo
 
-ARG MAINTAINER
-LABEL maintainer="${MAINTAINER}"
 
 # Gentoo and Kubler both have `/var/db/repos` as a volume
 # - Kubler has `/var/cache/eix` as a volume as well

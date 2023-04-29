@@ -34,6 +34,4 @@ EOF
 FROM busybox:latest
 COPY --from=builder /var/db/repos/gentoo /var/db/repos/gentoo
 
-ARG MAINTAINER
-LABEL maintainer="${MAINTAINER}"
 VOLUME /var/db/repos /var/cache/eix
