@@ -134,6 +134,9 @@ target "gentoo-portage" {
   args = {
     SNAPSHOT = "${SNAPSHOT}"
   }
+  labels = {
+    maintainer = "$MAINTAINER"
+  }
 }
 
 
@@ -149,6 +152,9 @@ target "vendored-portage" {
     DIST = "${DIST}"
     SIGNING_KEY = "${SIGNING_KEY}"
   }
+  labels = {
+    maintainer = "$MAINTAINER"
+  }
 }
 
 
@@ -160,7 +166,9 @@ target "kubler-portage" {
   tags = ["kubler-gentoo/portage:${TAG}"]
   args = {
     BASE_IMAGE = "${BASE_IMAGE}"
-    MAINTAINER = "${MAINTAINER}"
+  }
+  labels = {
+    maintainer = "$MAINTAINER"
   }
 }
 
