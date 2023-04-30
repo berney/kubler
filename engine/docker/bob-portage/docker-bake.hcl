@@ -40,7 +40,7 @@
 #
 # Use portage snapshot outside of normal build context
 #
-#     `SNAPSHOT=portage-20230423.tar.xz docker buildx bake kubler --load --set gentoo-portage.contexts.portage=$HOME/.kubler/downloads``
+#     `SNAPSHOT=portage-20230423.tar.xz docker buildx bake kubler --load --set gentoo-portage.contexts.portage=$HOME/.kubler/downloads`
 
 
 ## Variables
@@ -97,7 +97,6 @@ variable "SIGNING_KEY" {
 group "default" {
   # BASE_IMAGE="gentoo/portage"
   targets = [ "gentoo" ]
-
 }
 
 # Base off tarball (e.g. original kubler style) copied from host
@@ -124,6 +123,7 @@ group "vendored-kubler" {
   targets = [ "vendored-portage", "vendored" ]
 }
 
+
 # Uses gentoo portage tarball file
 # - Vanilla, doesn't have any patches applied
 # - This is alternative to using upstream `gentoo/portage` base image
@@ -135,7 +135,7 @@ target "gentoo-portage" {
     SNAPSHOT = "${SNAPSHOT}"
   }
   labels = {
-    maintainer = "$MAINTAINER"
+    maintainer = "${MAINTAINER}"
   }
 }
 
@@ -153,7 +153,7 @@ target "vendored-portage" {
     SIGNING_KEY = "${SIGNING_KEY}"
   }
   labels = {
-    maintainer = "$MAINTAINER"
+    maintainer = "${MAINTAINER}"
   }
 }
 
@@ -168,7 +168,7 @@ target "kubler-portage" {
     BASE_IMAGE = "${BASE_IMAGE}"
   }
   labels = {
-    maintainer = "$MAINTAINER"
+    maintainer = "${MAINTAINER}"
   }
 }
 

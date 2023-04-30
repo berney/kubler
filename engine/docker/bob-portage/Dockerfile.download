@@ -20,7 +20,7 @@ ARG SNAPSHOT
 # Will implicictly use default shell, but can use a shebang to be explicit
 RUN --mount=type=bind,target=/portage,from=portage <<-EOF
     #!/bin/sh
-    set -x
+    set -eux
     mkdir -p /var/db/repos/
     xzcat /portage/${SNAPSHOT} | tar -xf - -C /var/db/repos
     mv /var/db/repos/portage /var/db/repos/gentoo
