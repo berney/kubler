@@ -53,8 +53,6 @@ target "core" {
   }
   args = {
     BASE_IMAGE = "${BASE_IMAGE}"
-    BOB_SYNC_URI = "${BOB_SYNC_URI}"
-    BOB_SYNC_TYPE = "${BOB_SYNC_TYPE}"
     BOB_CHOST = "${BOB_CHOST}"
     BOB_CFLAGS = "${BOB_CFLAGS}"
     BOB_CXXFLAGS = "${BOB_CXXFLAGS}"
