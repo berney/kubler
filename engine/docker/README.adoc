@@ -1,0 +1,148 @@
+= docker buildx
+
+
+I've been experimenting with `docker buildx`
+buildx is modern, and in the (near) future will replace the legacy docker functionality.
+At the moment it is opt in, but soon it will be the default and the legacy may be removed.
+
+The features are new, and there's not feature parity, so there's a lot of gotchas.
+Opt'ing in to different features, changes behaviour.
+
+
+== Motivation
+
+Basically I want to make kubler faster, especially in CI/CD, and I want it to use the modern docker features, so I can get things like SBOMs and in-toto attestations, signed images, etc.
+
+My prime motivation is to get much faster build times in CI/CD.
+Currently it takes over 15 minutes just to get the kubler builders, `kubler/bob` and `kubler/bob-musl` built.
+Every workflow run needs these, and it takes a long time to iterate to fix mistakes and make improvements.
+I am caching kubler downloads, and distfiles, to speed up future workflows.
+The current features of GitHub Workflows and implementation of kubler doesn't lend itself to easily cache the images.
+GitHub has good support for caching `docker buildx`, but not legacy.
+I could code my workflow to take care of saving and restoring the builders to a cache, but I'd rather update kubler to use buildx, as it is the future.
+
+The script `docker-bake.sh` will run the commands needed to build images to bootstrap kubler with Gentoo Portage, Stage3, and core images.
+
+In the future this could be extended to the builders, and to the images themselves.
+
+
+== docker buildx bake
+
+This supports new file types like HCL, e.g. `docker-bake.hcl`, files that provide a nice syntax for building images.
+The helper script above uses `docker buildx bake`, and the `docker-bake.hcl` and `Dockerfiles` I wrote based off kubler.
+
+Basically everywhere that `kubler` interacts with `docker` could be changed to use `docker buildx bake`.
+Parts could be rewritten to use HCL.
+
+Leaning into this would provide better caching, better pipelining, and better concurrency.
+Docker bake can work out the dependency graph between stages/images and layers.
+It could also simplify kubler's implementation.
+
+
+== docker buildx build
+
+This is the BuildKit replacement for the legacy `docker build`.
+If you run `docker buildx install` it will replace `docker build` with the buildx version.
+Running `docker buildx uninstall` will put it back to the legacy one.
+You can tell which is installed by the different output for `docker build --help`.
+
+
+`docker buildx build` will always want to pull images from the registry (e.g. Docker Hub), even if they are local.
+If you use the `default` docker buildx builder (`docker`) (wonderful names aren't confusing), and the containerd image store (beta feature), then it will use the local images.
+
+If you don't have `docker buildx install`'ed then you will see the images in `docker images` but you won't be able to run them.
+Install buildx, or run the `docker buildx build` commands, this will make it so that `docker run` can see the images.
+
+
+== Kubler
+
+Kubler's behaviour is something like this:
+
+1. Download portage tarball
+2. Build `kubler-gentoo/portage` docker image based off the portage tarball.
+3. Download gentoo stage3 tarball
+4. Build `kubler-gento/stage3-blah` docker image based off stage3 tarball.
+5. Create portage container based off portage image.
+6. Create core image(s) based off stage3 image.
+   Mounts volumes from the portage container.
+   This adds the kubler build script.
+7. The kubler builder images are based off the core images.
+   These install some core build tools.
+8. The target images are built by running the builder image and emerging into `/emerge-root/`, this is tar'd up to make `rootfs.tar` saved in the `/config/`, which a volume bind mount of the target image source directory.
+   a. The `Dockerfile` is templated via sed, and adds the `rootfs.tar`
+
+
+== My Behaviour
+
+I run the `docker-bake.sh` script.
+This creates portage, stage3, and core images, bootstrapping steps 1-6 above.
+Then I run `kubler build <image>` as per normal.
+
+The `docker-bake.hcl` and `Dockerfiles` I wrote introduce some alternative options:
+
+1. Same old kubler OG behaviour, download a tarball, build an image
+2. Instead of downloading tarballs for gentoo portage and stage3, it can base off the upstream gentoo/portage and gentoo/stage3 docker images.
+3. Build the images like upstream gentoo does, which is download the tarball inside the image, rather than on the host.
+   This is a "vendored" version of upstream.
+
+In my experience using the upstream docker images (option 2) is the fastest, and the most "docker" centric IMO.
+
+
+=== Portage Behaviour
+I've also experimented with some other behavioural differences.
+In kubler a portage container is created based off the portage image.
+This is to expose a volume, basically portage.
+The other containers mount this volume so they have access to portage.
+
+Starting the portage container, results in teh creation of the portage volume.
+This copies all of portage from the image to the volume.
+As portage is relatively large, this takes some time, even with SSD.
+This slows the startup of portage.
+This expensive operation is only really needed once though.
+
+What I've done is add the portage directory into stage3, and thus all derived images, e.g. `bob-core`, and the builders `bob-musl` derived from it, have portage.
+Portage is a layer, so it is only stored once and shared by all these images.
+It is Copy-on-Write (COW).
+But since I prefer immutable infrastructure, I don't really want changes written.
+Currently it is R/W, but IMO ideally it would be R/O.
+
+.Volume Mounts with Kubler's method
+[source, json]
+----
+docker inspect rootfs-builder-berney-goss-26036-20088 | jq 'first.Mounts | map(.Destination)'
+[
+  "/var/cache/eix", # <1>
+  "/var/TODO", # <2>
+  "/config",
+  "/distfiles",
+  "/packages"
+]
+----
+<1> eix cache is mounted
+<2> Portage is mounted
+
+.Volume Mounts with my method
+[source, json]
+----
+docker inspect rootfs-builder-berney-goss-26036-20088 | jq 'first.Mounts | map(.Destination)'
+[
+  "/var/cache/eix", # <1>
+  "/config",
+  "/distfiles",
+  "/packages"
+]
+----
+<1> Only eix cache is mounted, portage is not mounted, as it is built in.
+
+The difference between kubler OG method and this method is a flexibility/performance trade-off.
+Kubler OG allows independent updates of portage from stage3/core/builder images.
+My experiment builds portage into stage3/core/builder images.
+To update portage, new images would need to be built.
+The versioning of portage and stage3 can be separate, but the image is the combination of the two.
+
+I can revert to kubler OG behaviour by having the portage image expose the VOLUME again, and removing the copying of the layer.
+Kubler will mount the volumes in, so things should work as before.
+Since the expensive operation should only occur once it's not that big a deal.
+
+However, if I was to kubler was to use `docker buildx bake` more, then the portage layer could be bind mounted, R/O, into the build images/stages.
+This would make kubler more performant, via more pipelining and concurrency, and would be safer via immutability.
