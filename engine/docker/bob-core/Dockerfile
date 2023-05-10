@@ -8,25 +8,15 @@ ARG BASE_IMAGE=gentoo/stage3:musl-hardened
 
 FROM $BASE_IMAGE
 
-# glibc
-ARG BOB_CHOST="x86_64-pc-linux-gnu"
-# musl
-#ARG BOB_CHOST="x86_64-gentoo-linux-musl"
-
-ARG BOB_CFLAGS="--mtune=generic -O2 -pipe"
-ARG BOB_CXXFLAGS=$BOB_CFLAGS
-ARG BOB_BUILDER_CHOST=$BOB_CHOST
-ARG BOB_BUILDER_CFLAGS=$BOB_CFLAGS
-ARG BOB_BUILDER_CXXFLAGS=$BOB_CXXFLAGS
-
+# musl use `x86_64-gentoo-linux-musl`
+ENV DEF_CHOST="x86_64-pc-linux-gnu"
+ENV DEF_CFLAGS="-mtune=generic -O2 -pipe"
+ENV DEF_CXXFLAGS="${DEF_CFLAGS}"
 # DEF_BUILDER_* is only active in configure_bob() hook, generally only differs when using crossdev
-ENV DEF_CHOST="${BOB_CHOST}" \
-    DEF_CFLAGS="${BOB_CFLAGS}" \
-    DEF_CXXFLAGS="${BOB_CXXFLAGS}" \
-    DEF_BUILDER_CHOST="${BOB_BUILDER_CHOST}" \
-    DEF_BUILDER_CFLAGS="${BOB_BUILDER_CFLAGS}" \
-    DEF_BUILDER_CXXFLAGS="${BOB_BUILDER_CXXFLAGS}" \
-    PKGDIR="/packages/${BOB_CHOST}"
+ENV DEF_BUILDER_CHOST="${DEF_CHOST}"
+ENV DEF_BUILDER_CFLAGS="${DEF_CFLAGS}"
+ENV DEF_BUILDER_CXXFLAGS="${DEF_CXXFLAGS}"
+ENV PKGDIR="/packages/${DEF_CHOST}"
 
 COPY etc/ /etc/
 COPY build-root.sh /usr/local/bin/kubler-build-root

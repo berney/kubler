@@ -14,7 +14,7 @@ variable "MAINTAINER" {
 }
 
 # If default is `null`, it lets ARG default in Dockerfile be used
-variable "BOB_CHOST" {
+variable "DEF_CHOST" {
   default = null
   # glibc
   #default = "x86_64-pc-linux-gnu"
@@ -22,21 +22,21 @@ variable "BOB_CHOST" {
   #default = "x86_64-gentoo-linux-musl"
 }
 
-variable "BOB_CFLAGS" {
+variable "DEF_CFLAGS" {
   default = null
 }
-variable "BOB_CXXFLAGS" {
+variable "DEF_CXXFLAGS" {
   default = null
 }
 
 # Only used for cross compiling
-variable "BOB_BUILDER_CHOST" {
+variable "DEF_BUILDER_CHOST" {
   default = null
 }
-variable "BOB_BUILDER_CFLAGS" {
+variable "DEF_BUILDER_CFLAGS" {
   default = null
 }
-variable "BOB_BUILDER_CXXFLAGS" {
+variable "DEF_BUILDER_CXXFLAGS" {
   default = null
 }
 
@@ -53,11 +53,13 @@ target "core" {
   }
   args = {
     BASE_IMAGE = "${BASE_IMAGE}"
-    BOB_CHOST = "${BOB_CHOST}"
-    BOB_CFLAGS = "${BOB_CFLAGS}"
-    BOB_CXXFLAGS = "${BOB_CXXFLAGS}"
-    BOB_BUILDER_CHOST = "${BOB_BUILDER_CHOST}"
-    BOB_BUILDER_CFLAGS = "${BOB_BUILDER_CFLAGS}"
-    BOB_BUILDER_CXXFLAGS = "${BOB_BUILDER_CXXFLAGS}"
+  }
+  env = {
+    DEF_CHOST = "${DEF_CHOST}"
+    DEF_CFLAGS = "${DEF_CFLAGS}"
+    DEF_CXXFLAGS = "${DEF_CXXFLAGS}"
+    DEF_BUILDER_CHOST = "${DEF_BUILDER_CHOST}"
+    DEF_BUILDER_CFLAGS = "${DEF_BUILDER_CFLAGS}"
+    DEF_BUILDER_CXXFLAGS = "${DEF_BUILDER_CXXFLAGS}"
   }
 }
