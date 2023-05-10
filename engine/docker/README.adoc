@@ -91,14 +91,14 @@ In my experience using the upstream docker images (option 2) is the fastest, and
 === Portage Behaviour
 I've also experimented with some other behavioural differences.
 In kubler a portage container is created based off the portage image.
-This is to expose a volume, basically portage.
-The other containers mount this volume so they have access to portage.
+This is to expose volumes, basically portage `/var/db/repos/`, and eix cache `/var/cache/eix/`.
+The other containers mount tehse volumes so they have access to portage and eix.
 
-Starting the portage container, results in teh creation of the portage volume.
+Starting the portage container, results in the creation of the portage volume.
 This copies all of portage from the image to the volume.
 As portage is relatively large, this takes some time, even with SSD.
 This slows the startup of portage.
-This expensive operation is only really needed once though.
+This expensive operation is only really performed once though, so it's not that big of a deal.
 
 What I've done is add the portage directory into stage3, and thus all derived images, e.g. `bob-core`, and the builders `bob-musl` derived from it, have portage.
 Portage is a layer, so it is only stored once and shared by all these images.
@@ -112,7 +112,7 @@ Currently it is R/W, but IMO ideally it would be R/O.
 docker inspect rootfs-builder-berney-goss-26036-20088 | jq 'first.Mounts | map(.Destination)'
 [
   "/var/cache/eix", # <1>
-  "/var/TODO", # <2>
+  "/var/db/repos", # <2>
   "/config",
   "/distfiles",
   "/packages"
