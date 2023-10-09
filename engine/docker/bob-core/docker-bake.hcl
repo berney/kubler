@@ -53,8 +53,6 @@ target "core" {
   }
   args = {
     BASE_IMAGE = "${BASE_IMAGE}"
-  }
-  env = {
     DEF_CHOST = "${DEF_CHOST}"
     DEF_CFLAGS = "${DEF_CFLAGS}"
     DEF_CXXFLAGS = "${DEF_CXXFLAGS}"
