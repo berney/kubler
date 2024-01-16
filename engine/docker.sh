@@ -27,7 +27,9 @@ DOCKER_BUILD_OPTS="${DOCKER_BUILD_OPTS:-}"
 DOCKER_COMMIT_OPTS="${DOCKER_COMMIT_OPTS:-}"
 
 _container_mount_portage='false'
-_portage_image_processed='false'
+## Berney: I've baked portage into the images, so this isn't needed.
+#_portage_image_processed='false'
+_portage_image_processed='true'
 
 # Is this engine functional? Called once per engine in current image dependency graph.
 function validate_engine() {
@@ -731,8 +733,10 @@ function build_core() {
     # add current image id to output logging
     add_status_value "${core_id}"
 
-    BOB_CURRENT_STAGE3_ID="${_STAGE3_NAMESPACE}/${STAGE3_BASE//+/-}"
-    import_stage3 "${BOB_CURRENT_STAGE3_ID}"
+    ## Berney: I bake bob-core and bob-musl-core docker images
+    ##         So, we don't need to download and import stage3
+    #BOB_CURRENT_STAGE3_ID="${_STAGE3_NAMESPACE}/${STAGE3_BASE//+/-}"
+    #import_stage3 "${BOB_CURRENT_STAGE3_ID}"
 
     image_exists_or_rm "${core_id}" "${_BUILDER_PATH}" && return 0
     expand_image_id "${core_id}" "${_BUILDER_PATH}"
