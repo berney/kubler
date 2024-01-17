@@ -92,7 +92,7 @@ In my experience using the upstream docker images (option 2) is the fastest, and
 I've also experimented with some other behavioural differences.
 In kubler a portage container is created based off the portage image.
 This is to expose volumes, basically portage `/var/db/repos/`, and eix cache `/var/cache/eix/`.
-The other containers mount tehse volumes so they have access to portage and eix.
+The other containers mount these volumes so they have access to portage and eix.
 
 Starting the portage container, results in the creation of the portage volume.
 This copies all of portage from the image to the volume.
@@ -144,5 +144,5 @@ I can revert to kubler OG behaviour by having the portage image expose the VOLUM
 Kubler will mount the volumes in, so things should work as before.
 Since the expensive operation should only occur once it's not that big a deal.
 
-However, if I was to kubler was to use `docker buildx bake` more, then the portage layer could be bind mounted, R/O, into the build images/stages.
+However, if I was to use `docker buildx bake` more, then the portage layer could be bind mounted, R/O, into the build images/stages.
 This would make kubler more performant, via more pipelining and concurrency, and would be safer via immutability.
