@@ -25,7 +25,14 @@ RUN <<-EOF
 EOF
 
 FROM busybox:latest
+ARG portage=250:250
 COPY --from=patcher /var/db/repos/gentoo /var/db/repos/gentoo
+RUN <<-EOF
+  set -ux
+  mkdir -p /var/cache/eix
+  chown $portage /var/cache/eix
+EOF
+
 
 
 # Gentoo and Kubler both have `/var/db/repos` as a volume
