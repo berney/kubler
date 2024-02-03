@@ -47,7 +47,7 @@ readonly _PORTAGE_CONTAINER="${_STAGE3_NAMESPACE}-portage"
 _TODAY="$(date +%Y%m%d)"
 readonly _TODAY
 _TTY_ATTACHED=false
-tty -s && _TTY_ATTACHED=true
+tty -s &> /dev/null && _TTY_ATTACHED=true
 readonly _TTY_ATTACHED
 
 # shellcheck disable=SC2034
